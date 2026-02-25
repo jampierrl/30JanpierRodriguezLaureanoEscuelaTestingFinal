@@ -12,6 +12,7 @@ Feature: Automatizar Users - Pet Store
     And request jsonCrearUser
     When method post
     Then status 200
+    And print response
 
   @TEST-2 @happypath
   Scenario: Buscar usuario existente

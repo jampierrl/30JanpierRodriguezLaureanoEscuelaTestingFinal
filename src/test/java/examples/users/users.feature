@@ -1,92 +1,62 @@
 @regresion
-Feature: Automatizar el backend de Pet Store
+Feature: Automatizar Users - Pet Store
 
   Background:
     * url apiPetStore
-    * def jsonCrearMascota = read('classpath:examples/jsonData/crearMascota.json')
-    * def jsonEditMascota = read('classpath:examples/jsonData/actualizarMascota.json')
+    * def jsonCrearUser = read('classpath:examples/jsonData/users/crearUser.json')
+    * def jsonActualizarUser = read('classpath:examples/jsonData/users/actualizarUser.json')
 
-  @TEST-1 @happypath @crearMascosta
-  Scenario: Verificar la creación de una nueva mascota en Pet Store - OK
-    Given path 'pet'
-    And request jsonCrearMascota
+  @TEST-1 @happypath
+  Scenario: Crear usuario correctamente
+    Given path 'user'
+    And request jsonCrearUser
     When method post
     Then status 200
-    And match response.id == 14
-    And match response.name == 'Max'
-    And match response.status == 'available'
-    * def idPet = response.id
-
 
   @TEST-2 @happypath
-  Scenario Outline: Verificar el estado de la mascota por los 3 estados que son available, sold y pending - OK
-    Given path 'pet/findByStatus'
-    And param status = '<estado>'
+  Scenario: Buscar usuario existente
+    Given path 'user', 'jampierTest'
     When method get
     Then status 200
-    And print response
-
-    Examples:
-      | estado    |
-      | available |
-      | sold      |
-      | pending   |
-
+    And match response.username == 'jampierTest'
 
   @TEST-3 @happypath
-  Scenario: Verificar la actualizacion de una mascota en Pet Store previamente registrada - OK
-    Given path 'pet'
-    * set jsonEditMascota.id = '3'
-    * set jsonEditMascota.name = 'Sassy'
-    * set jsonEditMascota.status = 'sold'
-    And request jsonEditMascota
+  Scenario: Actualizar usuario existente
+    Given path 'user', 'jampierTest'
+    And request jsonActualizarUser
     When method put
     Then status 200
-    And print response
 
   @TEST-4 @happypath
-  Scenario Outline: Verificar la busqueda de la mascota por id - OK
-    Given path 'pet/' + '<idPet>'
+  Scenario: Login correcto
+    Given path 'user/login'
+    And param username = 'jampierTest'
+    And param password = 'Test123!'
     When method get
     Then status 200
-    And print response
-
-    Examples:
-      | idPet |
-      | 1     |
-      | 2     |
-      | 3     |
 
   @TEST-5 @happypath
-  Scenario Outline: Verificar la eliminación de la mascota por id - OK
-    Given path 'pet/' + '<idPet>'
-    When method delete
-    Then status 200
-    And print response
-
-    Examples:
-      | idPet |
-      | 1     |
-      | 2     |
-      | 3     |
-
-  @TEST-6 @happypath
-  Scenario: Subir una imagen para una mascota existente
-    * def petId = 4
-    Given path 'pet', petId, 'uploadImage'
-    And multipart file file = { read: 'classpath:examples/imagenes/fotoPerfil.png', filename: 'fotoPerfil.png', contentType: 'image/png' }
-    And multipart field additionalMetadata = 'Foto de perfil'
-    When method post
-    Then status 200
-
-
-    #llamar a otro caso de prueba para usarlo después
-  @TEST-7 @happypath
-  Scenario: Verificar la busqueda de la mascota por id - OK
-    * def idMascosta = call read('classpath:examples/users/users.feature@crearMascosta')
-    Given path 'pet/' + idMascosta.idPet
+  Scenario: Logout correcto
+    Given path 'user/logout'
     When method get
     Then status 200
-    And print response
 
+  @TEST-6 @happypath
+  Scenario: Eliminar usuario existente
+    Given path 'user', 'jampierTest'
+    When method delete
+    Then status 200
 
+  @TEST-7 @unhappypath
+  Scenario: Buscar usuario inexistente
+    Given path 'user', 'usuarioFake999'
+    When method get
+    Then status 404
+
+  @TEST-8 @unhappypath
+  Scenario: Login con credenciales incorrectas
+    Given path 'user/login'
+    And param username = 'fakeUser'
+    And param password = 'wrongPass'
+    When method get
+    Then status 400
